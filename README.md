@@ -51,6 +51,10 @@ If only new records are required, please use -o option as follows:
 $ embulk run config.yml -o config.yml
 ```
 
+## Notice
+
+Health Planet API ver. 1.0 can not export 'Body Water Mass' data. Therefore embulk-input-healthplanet can not export the data, too.
+
 ## References
 
 * [Health Planet API Specification Ver. 1.0 (Japanese)](http://www.healthplanet.jp/apis/api.html)
