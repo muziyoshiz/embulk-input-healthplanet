@@ -36,7 +36,7 @@ module Embulk
           'client_id' => config.param('client_id', :string),
           'client_secret' => config.param('client_secret', :string),
           # Date of last-downloaded data
-          'last_date' => config.param('last_date', :integer, :default => nil)
+          'last_date' => config.param('last_date', :string, :default => nil)
         }
 
         columns = [
@@ -70,7 +70,9 @@ module Embulk
         password = task['password']
         client_id = task['client_id']
         client_secret = task['client_secret']
-        @last_date = task['last_date']
+        if task['last_date']
+          @last_date = Time.strptime(task['last_date'], '%Y-%m-%d %H:%M:%S')
+        end
 
         # Setup connection
         @conn = Faraday.new(:url => 'https://www.healthplanet.jp') do |faraday|
@@ -132,25 +134,47 @@ module Embulk
       end
 
       def run
+        from = @last_date.nil? ? (Time.now - 60*60*24*365) : @last_date
+        last_date = nil
+
+        while from < Time.now
+          # 90 days later
+          to = (from + 60*60*24*30*3)
+          date = innerscan(from, to)
+          # Update last_date if any data exists
+          last_date = date if date
+
+          # Next request must start from 1 minute later to avoid redundant data
+          from = to + 60
+        end
+
+        page_builder.finish
+
+        task_report = {}
+        unless preview? or last_date.nil?
+          task_report = { :last_date => (last_date + 60).strftime('%Y-%m-%d %H:%M:%S') }
+        end
+        return task_report
+      end
+
+      def innerscan(from = nil, to = nil)
         response = @conn.get do |req|
           req.url 'status/innerscan.json'
           req.params[:access_token] = @access_token
           # 0: registered time, 1: measured time
           req.params[:date] = 1
-          if @last_date
-            # over 1 minute (less than 1 minute are ignored)
-            req.params[:from] = (@last_date + 100).to_s
-          end
-          # req.params[:to]   = '20160201000000'
+          req.params[:from] = from.strftime('%Y%m%d%H%M%S') unless from.nil?
+          req.params[:to]   = to.strftime('%Y%m%d%H%M%S')   unless to.nil?
           req.params[:tag]  = ALL_TAGS
         end
 
+        p "body: " + response.body
         data = JSON.parse(response.body)
 
         result = {}
 
         data['data'].each do |record|
-          date = record['date']
+          date = Time.strptime(record['date'], '%Y%m%d%H%M')
 
           result[date] ||= {}
           result[date]['model'] ||= record['model']
@@ -162,7 +186,7 @@ module Embulk
 
         dates.each do |date|
           page = Array.new(11)
-          page[0] = Time.strptime(date, '%Y%m%d%H%M')
+          page[0] = date
           result[date].each do |key, value|
             case key
             when 'model'
@@ -200,13 +224,7 @@ module Embulk
           page_builder.add(page)
         end
 
-        page_builder.finish
-
-        task_report = {}
-        unless preview? or last_date.nil?
-          task_report = { :last_date => last_date + '00' }
-        end
-        return task_report
+        last_date
       end
 
       def preview?
