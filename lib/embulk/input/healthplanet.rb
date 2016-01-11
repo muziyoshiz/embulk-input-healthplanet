@@ -30,7 +30,7 @@ module Embulk
       RESPONSE_INTERVAL = 60*60*24*30*3
 
       # embulk-input-healthplanet retrieves data from one year ago by default
-      # If you need data more than one year ago, please set 'last_date' parameter
+      # If you need data more than one year ago, please set 'next_from' parameter
       DEFAULT_FROM_TIME = 60*60*24*365
 
       def self.transaction(config, &control)
@@ -42,8 +42,8 @@ module Embulk
           # Credential for embulk-input-healthplanet, application type "Client Application"
           'client_id' => config.param('client_id', :string),
           'client_secret' => config.param('client_secret', :string),
-          # Date of last-downloaded data
-          'last_date' => config.param('last_date', :string, :default => nil)
+          # This plugin retrieves new data after this time
+          'next_from' => config.param('next_from', :string, :default => nil)
         }
 
         columns = [
@@ -77,8 +77,8 @@ module Embulk
         password = task['password']
         client_id = task['client_id']
         client_secret = task['client_secret']
-        if task['last_date']
-          @last_date = Time.strptime(task['last_date'], '%Y-%m-%d %H:%M:%S')
+        if task['next_from']
+          @next_from = Time.strptime(task['next_from'], '%Y-%m-%d %H:%M:%S')
         end
 
         # Setup connection
@@ -103,7 +103,7 @@ module Embulk
 
         unless response.status == 302
           # TODO return error in Embulk manner
-          p 'login failure'
+          print "Login failure\n"
         end
 
         # Get auth page again with JSESSIONID
@@ -141,7 +141,7 @@ module Embulk
       end
 
       def run
-        from = @last_date.nil? ? (Time.now - DEFAULT_FROM_TIME) : @last_date
+        from = @next_from.nil? ? (Time.now - DEFAULT_FROM_TIME) : @next_from
         last_date = nil
 
         while from < Time.now
@@ -158,7 +158,8 @@ module Embulk
 
         task_report = {}
         unless preview? or last_date.nil?
-          task_report = { :last_date => (last_date + 60).strftime('%Y-%m-%d %H:%M:%S') }
+          # Next request must start from 1 minute later to avoid redundant data
+          task_report = { :next_from => (last_date + 60).strftime('%Y-%m-%d %H:%M:%S') }
         end
         return task_report
       end
@@ -174,7 +175,6 @@ module Embulk
           req.params[:tag]  = ALL_TAGS
         end
 
-        p "body: " + response.body
         data = JSON.parse(response.body)
 
         result = {}
