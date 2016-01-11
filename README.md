@@ -34,3 +34,7 @@ in:
 ```
 $ rake
 ```
+
+## References
+
+* [Health Planet API Specification Ver. 1.0 (Japanese)](http://www.healthplanet.jp/apis/api.html)
