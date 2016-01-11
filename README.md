@@ -58,3 +58,4 @@ Health Planet API ver. 1.0 can not export 'Body Water Mass' data. Therefore embu
 ## References
 
 * [Health Planet API Specification Ver. 1.0 (Japanese)](http://www.healthplanet.jp/apis/api.html)
+* [Health Planet からデータをエクスポートするための embulk-input-healthplanet プラグイン - 無印吉澤](http://muziyoshiz.hatenablog.com/entry/2016/01/11/234921 "Health Planet からデータをエクスポートするための embulk-input-healthplanet プラグイン - 無印吉澤")
