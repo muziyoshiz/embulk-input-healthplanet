@@ -30,27 +30,29 @@ module Embulk
         # configuration code:
         task = {
           # Account for Health Planet
-          "login_id" => config.param("login_id", :string),
-          "password" => config.param("password", :string),
+          'login_id' => config.param('login_id', :string),
+          'password' => config.param('password', :string),
           # Credential for embulk-input-healthplanet, application type "Client Application"
-          "client_id" => config.param("client_id", :string),
-          "client_secret" => config.param("client_secret", :string),
+          'client_id' => config.param('client_id', :string),
+          'client_secret' => config.param('client_secret', :string),
+          # Date of last-downloaded data
+          'last_date' => config.param('last_date', :integer, :default => nil)
         }
 
         columns = [
-          Column.new(0, "time", :timestamp),
-          Column.new(1, "model", :string),
-          Column.new(2, "weight", :double),
-          Column.new(3, "body fat %", :double),
-          Column.new(4, "muscle mass", :double),
-          Column.new(5, "muscle score", :long),
-          Column.new(6, "visceral fat level 2", :double),
-          Column.new(7, "visceral fat level 1", :long),
-          Column.new(8, "basal metabolic rate", :long),
-          Column.new(9, "metabolic age", :long),
-          Column.new(10, "estimated bone mass", :double),
+          Column.new(0, 'time', :timestamp),
+          Column.new(1, 'model', :string),
+          Column.new(2, 'weight', :double),
+          Column.new(3, 'body fat %', :double),
+          Column.new(4, 'muscle mass', :double),
+          Column.new(5, 'muscle score', :long),
+          Column.new(6, 'visceral fat level 2', :double),
+          Column.new(7, 'visceral fat level 1', :long),
+          Column.new(8, 'basal metabolic rate', :long),
+          Column.new(9, 'metabolic age', :long),
+          Column.new(10, 'estimated bone mass', :double),
           # Not supported by Health Planet API Ver. 1.0
-#          Column.new(11, "body water mass", :string),
+#          Column.new(11, 'body water mass', :string),
         ]
 
         resume(task, columns, 1, &control)
@@ -59,15 +61,16 @@ module Embulk
       def self.resume(task, columns, count, &control)
         task_reports = yield(task, columns, count)
 
-        next_config_diff = {}
+        next_config_diff = task_reports.first
         return next_config_diff
       end
 
       def init
-        login_id = task["login_id"]
-        password = task["password"]
-        client_id = task["client_id"]
-        client_secret = task["client_secret"]
+        login_id = task['login_id']
+        password = task['password']
+        client_id = task['client_id']
+        client_secret = task['client_secret']
+        @last_date = task['last_date']
 
         # Setup connection
         @conn = Faraday.new(:url => 'https://www.healthplanet.jp') do |faraday|
@@ -91,7 +94,7 @@ module Embulk
 
         unless response.status == 302
           # TODO return error in Embulk manner
-          p "login failure"
+          p 'login failure'
         end
 
         # Get auth page again with JSESSIONID
@@ -105,7 +108,7 @@ module Embulk
 
         # Read oauth_token
         document = Oga.parse_html(NKF.nkf('-Sw', response.body))
-        oauth_token = document.at_xpath('//input[@name="oauth_token"]').get("value")
+        oauth_token = document.at_xpath('//input[@name="oauth_token"]').get('value')
 
         # Post /oauth/approval.do
         response = @conn.post '/oauth/approval.do', { :approval => 'true', :oauth_token => oauth_token }
@@ -125,7 +128,7 @@ module Embulk
         end
 
         tokens = JSON.parse(response.body)
-        @access_token = tokens["access_token"]
+        @access_token = tokens['access_token']
       end
 
       def run
@@ -134,7 +137,10 @@ module Embulk
           req.params[:access_token] = @access_token
           # 0: registered time, 1: measured time
           req.params[:date] = 1
-          # req.params[:from] = '20160101000000'
+          if @last_date
+            # over 1 minute (less than 1 minute are ignored)
+            req.params[:from] = (@last_date + 100).to_s
+          end
           # req.params[:to]   = '20160201000000'
           req.params[:tag]  = ALL_TAGS
         end
@@ -144,16 +150,19 @@ module Embulk
         result = {}
 
         data['data'].each do |record|
-          date = Time.strptime(record['date'], '%Y%m%d%H%M')
+          date = record['date']
 
           result[date] ||= {}
           result[date]['model'] ||= record['model']
           result[date][record['tag']]  = record['keydata']
         end
 
-        result.keys.sort.each do |date|
+        dates = result.keys.sort
+        last_date = dates.last
+
+        dates.each do |date|
           page = Array.new(11)
-          page[0] = date
+          page[0] = Time.strptime(date, '%Y%m%d%H%M')
           result[date].each do |key, value|
             case key
             when 'model'
@@ -194,9 +203,19 @@ module Embulk
         page_builder.finish
 
         task_report = {}
+        unless preview? or last_date.nil?
+          task_report = { :last_date => last_date + '00' }
+        end
         return task_report
       end
-    end
 
+      def preview?
+        begin
+          org.embulk.spi.Exec.isPreview()
+        rescue java.lang.NullPointerException => e
+          false
+        end
+      end
+    end
   end
 end
