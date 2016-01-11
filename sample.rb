@@ -102,18 +102,15 @@ end
 
 data = JSON.parse(response.body)
 
-print data['birth_date'].to_s + "\n"
-print data['height'].to_s + "\n"
-print data['sex'].to_s + "\n"
-
-data['data']
-
 result = {}
 
 data['data'].each do |record|
   result[record['date']] ||= {}
-  result[record['date']]['model'] = record['model']
-  result[record['date']][record['tag']] = record['keydata']
+#  result[record['date']]['birth_date']   ||= data['birth_date']
+#  result[record['date']]['height']       ||= data['height']
+#  result[record['date']]['sex']          ||= data['sex']
+  result[record['date']]['model']        ||= record['model']
+  result[record['date']][record['tag']]  = record['keydata']
 end
 
 p result
