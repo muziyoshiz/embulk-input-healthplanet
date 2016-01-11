@@ -63,16 +63,6 @@ module Embulk
         return next_config_diff
       end
 
-      # TODO
-      #def self.guess(config)
-      #  sample_records = [
-      #    {"example"=>"a", "column"=>1, "value"=>0.1},
-      #    {"example"=>"a", "column"=>2, "value"=>0.2},
-      #  ]
-      #  columns = Guess::SchemaGuess.from_hash_records(sample_records)
-      #  return {"columns" => columns}
-      #end
-
       def init
         login_id = task["login_id"]
         password = task["password"]
@@ -96,10 +86,11 @@ module Embulk
           req.params[:response_type] = DEFAULT_RESPONSE_TYPE
         end
 
-        #
+        # Login and set session information
         response = @conn.post 'login_oauth.do', { :loginId => login_id, :passwd => password, :send => '1', :url => "https://www.healthplanet.jp/oauth/auth?client_id=#{client_id}&redirect_uri=#{REDIRECT_URI}&scope=#{DEFAULT_SCOPE}&response_type=#{DEFAULT_RESPONSE_TYPE}" }
 
         unless response.status == 302
+          # TODO return error in Embulk manner
           p "login failure"
         end
 
@@ -159,8 +150,6 @@ module Embulk
           result[date]['model'] ||= record['model']
           result[date][record['tag']]  = record['keydata']
         end
-
-        p result.keys
 
         result.keys.sort.each do |date|
           page = Array.new(11)
