@@ -1,13 +1,13 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "embulk-input-healthplanet"
-  spec.version       = "0.1.0"
+  spec.version       = "1.0.0"
   spec.authors       = ["Masahiro Yoshizawa"]
   spec.summary       = "Healthplanet input plugin for Embulk"
-  spec.description   = "Loads records from Healthplanet."
+  spec.description   = "Retrieve your innerscan data through Health Planet API v1."
   spec.email         = ["muziyoshiz@gmail.com"]
   spec.licenses      = ["MIT"]
-  # TODO set this: spec.homepage      = "https://github.com/muziyoshiz/embulk-input-healthplanet"
+  spec.homepage      = "https://github.com/muziyoshiz/embulk-input-healthplanet"
 
   spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
   spec.test_files    = spec.files.grep(%r{^(test|spec)/})

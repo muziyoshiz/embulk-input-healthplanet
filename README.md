@@ -11,12 +11,19 @@ This plugin only supports 'innerscan' scope. Other scopes such as 'sphygmomanome
 * **Cleanup supported**: no
 * **Guess supported**: no
 
+## Install
+
+```
+$ embulk gem install embulk-input-healthplanet
+```
+
 ## Configuration
 
 - **login_id**: Login ID for Health Planet website (string, required)
 - **password**: Password for Health Planet website (string, required)
 - **client_id**: Client ID for your client application using this plugin (string, required)
 - **client_secret**: Client Secret for your client application using this plugin (string, required)
+- **next_from**: Retrieve data from the time '%Y-%m-%d %H:%M:%S' (string, default: 1 year ago)
 
 ## Example
 
@@ -27,12 +34,21 @@ in:
   password: example_password
   client_id: example.apps.healthplanet.jp
   client_secret: 12345678901123-ExampleClientSecret
+  next_from: '2015-01-01 00:00:00'
+exec: {}
+out:
+  type: file
+  path_prefix: ./healthplanet/
+  file_ext: csv
+  formatter:
+    type: csv
+    default_timezone: 'Asia/Tokyo'
 ```
 
-## Build
+If only new records are required, please use -o option as follows:
 
 ```
-$ rake
+$ embulk run config.yml -o config.yml
 ```
 
 ## References
