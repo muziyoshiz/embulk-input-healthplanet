@@ -26,6 +26,13 @@ module Embulk
       # All tags for innerscan
       ALL_TAGS = '6021,6022,6023,6024,6025,6026,6027,6028,6029'
 
+      # Health Planet API can response only in 3 months
+      RESPONSE_INTERVAL = 60*60*24*30*3
+
+      # embulk-input-healthplanet retrieves data from one year ago by default
+      # If you need data more than one year ago, please set 'last_date' parameter
+      DEFAULT_FROM_TIME = 60*60*24*365
+
       def self.transaction(config, &control)
         # configuration code:
         task = {
@@ -134,12 +141,11 @@ module Embulk
       end
 
       def run
-        from = @last_date.nil? ? (Time.now - 60*60*24*365) : @last_date
+        from = @last_date.nil? ? (Time.now - DEFAULT_FROM_TIME) : @last_date
         last_date = nil
 
         while from < Time.now
-          # 90 days later
-          to = (from + 60*60*24*30*3)
+          to = from + RESPONSE_INTERVAL
           date = innerscan(from, to)
           # Update last_date if any data exists
           last_date = date if date
