@@ -23,6 +23,9 @@ module Embulk
       # Default grant type
       DEFAULT_GRANT_TYPE = 'authorization_code'
 
+      # All tags for innerscan
+      ALL_TAGS = '6021,6022,6023,6024,6025,6026,6027,6028,6029'
+
       def self.transaction(config, &control)
         # configuration code:
         task = {
@@ -140,9 +143,9 @@ module Embulk
           req.params[:access_token] = @access_token
           # 0: registered time, 1: measured time
           req.params[:date] = 1
-          req.params[:from] = '20160101000000'
-          req.params[:to]   = '20160201000000'
-          req.params[:tag]  = '6021,6022,6023,6024,6025,6026,6027,6028,6029'
+          # req.params[:from] = '20160101000000'
+          # req.params[:to]   = '20160201000000'
+          req.params[:tag]  = ALL_TAGS
         end
 
         data = JSON.parse(response.body)
