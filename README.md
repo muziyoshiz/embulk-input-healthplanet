@@ -1,6 +1,6 @@
 # Healthplanet input plugin for Embulk
 
-Retrieve your innerscan data through Health Planet API v1.
+Retrieve your data from [TANITA's Health Planet website](https://www.healthplanet.jp/) through Health Planet API v1.
 
 This plugin only supports 'innerscan' scope. Other scopes such as 'sphygmomanometer', 'pedometer' and 'smug' are not supported.
 
