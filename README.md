@@ -53,7 +53,7 @@ $ embulk run config.yml -o config.yml
 
 ## Notice
 
-Health Planet API ver. 1.0 does not export 'Body Water Mass' data. I reported this issue to TANITA. But with no word of thanks, they just replied that they do not fix this issue because this API is free. embulk-input-healthplanet therefore can not export the 'Body Water Mass' data, too.
+Health Planet API ver. 1.0 does not export 'Body Water Mass' data. I reported this issue to TANITA. But with no word of thanks, they just replied that they did not fix this issue because this API was free. embulk-input-healthplanet therefore can not export the 'Body Water Mass' data, too.
 
 ## References
 
