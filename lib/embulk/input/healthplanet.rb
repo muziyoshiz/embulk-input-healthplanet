@@ -4,6 +4,7 @@ require 'oga'
 require 'nkf'
 require 'json'
 require 'time'
+require 'embulk/input/healthplanet_api/column'
 
 module Embulk
   module Input
@@ -46,18 +47,21 @@ module Embulk
           'next_from' => config.param('next_from', :string, :default => nil)
         }
 
+        lang = config.param('lang', :string, :default => 'en')
+        col = HealthplanetApi::Column.new(lang)
+
         columns = [
-          Column.new(0, 'time', :timestamp),
-          Column.new(1, 'model', :string),
-          Column.new(2, 'weight', :double),
-          Column.new(3, 'body fat %', :double),
-          Column.new(4, 'muscle mass', :double),
-          Column.new(5, 'muscle score', :long),
-          Column.new(6, 'visceral fat level 2', :double),
-          Column.new(7, 'visceral fat level 1', :long),
-          Column.new(8, 'basal metabolic rate', :long),
-          Column.new(9, 'metabolic age', :long),
-          Column.new(10, 'estimated bone mass', :double),
+          Column.new(0, col.name(:time), :timestamp),
+          Column.new(1, col.name(:model), :string),
+          Column.new(2, col.name(:weight), :double),
+          Column.new(3, col.name(:body_fat), :double),
+          Column.new(4, col.name(:muscle_mass), :double),
+          Column.new(5, col.name(:muscle_score), :long),
+          Column.new(6, col.name(:visceral_fat2), :double),
+          Column.new(7, col.name(:visceral_fat1), :long),
+          Column.new(8, col.name(:metabolic_rate), :long),
+          Column.new(9, col.name(:metabolic_age), :long),
+          Column.new(10, col.name(:bone_mass), :double),
           # Not supported by Health Planet API Ver. 1.0
 #          Column.new(11, 'body water mass', :string),
         ]
