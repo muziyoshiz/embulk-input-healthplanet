@@ -24,6 +24,10 @@ $ embulk gem install embulk-input-healthplanet
 - **client_id**: Client ID for your client application using this plugin (string, required)
 - **client_secret**: Client Secret for your client application using this plugin (string, required)
 - **next_from**: Retrieve data from the time '%Y-%m-%d %H:%M:%S' (string, default: 1 year ago)
+- **lang**: Language for column name (string, default: en)
+    - en or english: English name such as "weight" or "body fat %"
+    - ja or japanese: Japanese name such as "体重" or "体脂肪率"
+    - other: as-is API tag such as "6021" or "6022"
 
 ## Example
 
