@@ -39,6 +39,7 @@ in:
   client_id: example.apps.healthplanet.jp
   client_secret: 12345678901123-ExampleClientSecret
   next_from: '2015-01-01 00:00:00'
+  lang: ja
 exec: {}
 out:
   type: file
